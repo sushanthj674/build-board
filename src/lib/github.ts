@@ -22,17 +22,36 @@ export async function fetchWorkflowStatus(
   const activeToken = token || process.env.NEXT_PUBLIC_GITHUB_TOKEN;
   const url = `https://api.github.com/repos/${owner}/${repo}/actions/runs?per_page=${limit}`;
 
+  const makeRequest = async (useToken: string | undefined) => {
+    const headers: HeadersInit = {
+      Accept: 'application/vnd.github.v3+json',
+    };
+    if (useToken) {
+      headers.Authorization = `token ${useToken}`;
+    }
+    return fetch(url, { headers, cache: 'no-store' });
+  };
+
   try {
-    const response = await fetch(url, {
-      headers: {
-        Authorization: activeToken ? `token ${activeToken}` : '',
-        Accept: 'application/vnd.github.v3+json',
-      },
-      cache: 'no-store'
-    });
+    let response = await makeRequest(activeToken);
+
+    // If unauthorized with a token, try one more time without a token
+    // This handles public repos in other orgs where the global token isn't valid
+    if (response.status === 401 && activeToken) {
+      response = await makeRequest(undefined);
+    }
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch workflow status: ${response.statusText}`);
+      if (response.status === 403) {
+        throw new Error('Rate limit exceeded or access denied. Please check your token.');
+      }
+      if (response.status === 404) {
+        throw new Error('Repository not found.');
+      }
+      if (response.status === 401) {
+        throw new Error('Unauthorized. This repository may be private.');
+      }
+      throw new Error(`GitHub Error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -43,12 +62,8 @@ export async function fetchWorkflowStatus(
       repo,
       workflowRuns,
     };
-  } catch (error) {
-    console.error('Error fetching GitHub workflow status:', error);
-    return {
-      owner,
-      repo,
-      workflowRuns: [],
-    };
+  } catch (error: any) {
+    console.error('GitHub API Error:', error.message);
+    throw error;
   }
 }

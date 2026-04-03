@@ -21,7 +21,9 @@ const RepoCard: React.FC<RepoCardProps> = ({ owner, repo, token, onDelete }) => 
 
   useEffect(() => {
     if (isError && !hasNotifiedError) {
-      toast.error(`Failed to fetch ${owner}/${repo}. Check your token or repo name.`, {
+      const message = isError.message || `Failed to fetch ${owner}/${repo}. Check your token or repo name.`;
+      
+      toast.error(message, {
         id: `${owner}-${repo}-error`,
       });
       setHasNotifiedError(true);
@@ -97,7 +99,10 @@ const RepoCard: React.FC<RepoCardProps> = ({ owner, repo, token, onDelete }) => 
 
       <div className="space-y-4">
         {isError ? (
-          <p className="text-red-500/70 text-xs font-bold uppercase tracking-tighter">Repository Not Found or Access Denied</p>
+          <div className="space-y-2">
+            <p className="text-red-500/70 text-xs font-bold uppercase tracking-tighter">API Error</p>
+            <p className="text-[10px] text-neutral-500 font-medium leading-relaxed">{isError.message}</p>
+          </div>
         ) : !lastRun ? (
           <p className="text-neutral-500 text-sm">No workflow runs found.</p>
         ) : (
