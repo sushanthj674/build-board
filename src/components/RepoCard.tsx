@@ -81,7 +81,7 @@ const RepoCard: React.FC<RepoCardProps> = ({ owner, repo, token, onDelete }) => 
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-xl font-black text-white tracking-tight leading-tight">{repo}</h3>
-            {token && <Lock size={12} className="text-neutral-500" title="Private Repository" />}
+            {token && <Lock size={12} className="text-neutral-500" />}
           </div>
           <p className="text-xs text-neutral-500 font-medium">{owner}</p>
         </div>
