@@ -22,7 +22,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Copy necessary files from the builder stage
-# We only need the public folder, the static assets, and the standalone build
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
@@ -31,6 +31,5 @@ COPY --from=builder /app/.next/static ./.next/static
 EXPOSE 3000
 
 # Start the application
-# Next.js standalone output uses 'server.js' by default.
-# It automatically respects the PORT environment variable if provided by Render.
-CMD ["node", "server.js"]
+# We use 'next start' which respects the PORT env var by default.
+CMD ["npm", "run", "start", "--", "-p", "${PORT:-3000}"]
