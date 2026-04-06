@@ -19,7 +19,7 @@ interface RepoContextType {
 
 const RepoContext = createContext<RepoContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'dashboard_repos_v2';
+const STORAGE_KEY = 'dashboard_repos_v3';
 
 export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [repos, setRepos] = useState<RepoConfig[]>([]);
