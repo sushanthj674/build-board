@@ -31,5 +31,7 @@ COPY --from=builder /app/.next/static ./.next/static
 EXPOSE 3000
 
 # Start the application
-# Next.js standalone output uses 'server.js' by default
+# Next.js standalone output uses 'server.js' by default.
+# We explicitly set the port to the one provided by Render (defaulting to 3000).
+ENV PORT 3000
 CMD ["node", "server.js"]
