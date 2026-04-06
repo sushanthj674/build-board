@@ -1,3 +1,5 @@
+import { toast } from 'sonner';
+
 export interface WorkflowRun {
   id: number;
   name: string;
@@ -56,11 +58,18 @@ export async function createWebhook(
       return true;
     }
 
-    const errorData = await response.json();
-    console.error('Failed to create webhook:', errorData.message);
+    const errorData = await response.json().catch(() => ({ message: 'No error data' }));
+    console.error(`Failed to create webhook for ${owner}/${repo}:`, response.status, errorData.message);
+    
+    if (response.status === 404) {
+      toast.error(`Could not create webhook. Ensure your token has 'admin:repo_hook' permission and the repo exists.`);
+    } else {
+      toast.error(`GitHub Error (${response.status}): ${errorData.message}`);
+    }
     return false;
-  } catch (error) {
-    console.error('Error creating webhook:', error);
+  } catch (error: any) {
+    console.error('Error creating webhook:', error.message);
+    toast.error(`Error: ${error.message}`);
     return false;
   }
 }
