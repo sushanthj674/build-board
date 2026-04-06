@@ -10,8 +10,6 @@ RUN npm ci
 COPY . .
 
 # Build the application
-# We disable linting and type checking during the build to speed it up,
-# as these should ideally be handled in your CI pipeline.
 RUN npm run build
 
 # Stage 2: Serve the application using a lightweight image
@@ -20,9 +18,13 @@ WORKDIR /app
 
 # Set environment to production
 ENV NODE_ENV=production
+# Next.js standalone listens on 0.0.0.0 by default, but we'll be explicit
+ENV HOSTNAME "0.0.0.0"
+# Render assigns a PORT, we'll default to 3000 if not provided
+ENV PORT 3000
 
 # Copy necessary files from the builder stage
-COPY --from=builder /app/package.json ./package.json
+# In standalone mode, we copy the contents of the standalone folder to the root
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
@@ -30,6 +32,5 @@ COPY --from=builder /app/.next/static ./.next/static
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the application
-# We use 'next start' which respects the PORT env var by default.
-CMD ["npm", "run", "start", "--", "-p", "${PORT:-3000}"]
+# Start the application using the standalone server
+CMD ["node", "server.js"]
