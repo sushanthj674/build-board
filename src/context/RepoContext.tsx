@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
 
-import { createWebhook } from '@/lib/github';
+import { createWebhook, deleteWebhook } from '@/lib/github';
 
 export interface RepoConfig {
   owner: string;
@@ -21,7 +21,7 @@ interface RepoContextType {
   repos: RepoConfig[];
   savedTokens: AuthToken[];
   addRepo: (owner: string, repo: string, token?: string) => Promise<void>;
-  deleteRepo: (owner: string, repo: string) => void;
+  deleteRepo: (owner: string, repo: string) => Promise<void>;
   addSavedToken: (label: string, token: string) => void;
   deleteSavedToken: (id: string) => void;
 }
@@ -91,7 +91,14 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     toast.success(`Monitoring ${owner}/${repo}`);
   };
 
-  const deleteRepo = (owner: string, repo: string) => {
+  const deleteRepo = async (owner: string, repo: string) => {
+    const repoToDelete = repos.find(r => r.owner === owner && r.repo === repo);
+    
+    if (repoToDelete?.token) {
+      // Cleanup webhook on GitHub
+      await deleteWebhook(owner, repo, repoToDelete.token);
+    }
+
     const newRepos = repos.filter(r => !(r.owner === owner && r.repo === repo));
     setRepos(newRepos);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newRepos));

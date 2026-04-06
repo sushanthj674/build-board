@@ -51,6 +51,50 @@ export async function searchUserRepos(
   return [];
 }
 
+export async function deleteWebhook(
+  owner: string, 
+  repo: string, 
+  token: string
+): Promise<boolean> {
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/api/webhook/github`;
+  const url = `https://api.github.com/repos/${owner}/${repo}/hooks`;
+  
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `Bearer ${token.trim()}`,
+        'User-Agent': 'GitHub-Actions-Dashboard',
+      }
+    });
+
+    if (!response.ok) return false;
+
+    const hooks = await response.json();
+    const dashboardHook = hooks.find((h: any) => h.config.url === webhookUrl);
+
+    if (dashboardHook) {
+      const deleteResponse = await fetch(`${url}/${dashboardHook.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token.trim()}`,
+          'User-Agent': 'GitHub-Actions-Dashboard',
+        }
+      });
+      
+      if (deleteResponse.status === 204) {
+        console.log(`Successfully deleted webhook for ${owner}/${repo}`);
+        toast.info(`Webhook removed for ${owner}/${repo}`);
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('Error deleting webhook:', error);
+    return false;
+  }
+}
+
 export async function createWebhook(
   owner: string, 
   repo: string, 
