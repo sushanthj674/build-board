@@ -11,30 +11,65 @@ export interface RepoConfig {
   token?: string;
 }
 
+export interface AuthToken {
+  id: string;
+  label: string;
+  token: string;
+}
+
 interface RepoContextType {
   repos: RepoConfig[];
+  savedTokens: AuthToken[];
   addRepo: (owner: string, repo: string, token?: string) => Promise<void>;
   deleteRepo: (owner: string, repo: string) => void;
+  addSavedToken: (label: string, token: string) => void;
+  deleteSavedToken: (id: string) => void;
 }
 
 const RepoContext = createContext<RepoContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'dashboard_repos_v3';
+const TOKENS_STORAGE_KEY = 'dashboard_tokens_v1';
 
 export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [repos, setRepos] = useState<RepoConfig[]>([]);
+  const [savedTokens, setSavedTokens] = useState<AuthToken[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      setRepos(JSON.parse(saved));
+    // Load repos
+    const savedRepos = localStorage.getItem(STORAGE_KEY);
+    if (savedRepos) {
+      setRepos(JSON.parse(savedRepos));
     } else {
-      // Start with an empty list instead of a default repo
-      const initial: RepoConfig[] = [];
-      setRepos(initial);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+      setRepos([]);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    }
+
+    // Load tokens
+    const savedTokensList = localStorage.getItem(TOKENS_STORAGE_KEY);
+    if (savedTokensList) {
+      setSavedTokens(JSON.parse(savedTokensList));
     }
   }, []);
+
+  const addSavedToken = (label: string, token: string) => {
+    const newToken: AuthToken = {
+      id: crypto.randomUUID(),
+      label,
+      token,
+    };
+    const newTokens = [...savedTokens, newToken];
+    setSavedTokens(newTokens);
+    localStorage.setItem(TOKENS_STORAGE_KEY, JSON.stringify(newTokens));
+    toast.success(`Token "${label}" saved.`);
+  };
+
+  const deleteSavedToken = (id: string) => {
+    const newTokens = savedTokens.filter(t => t.id !== id);
+    setSavedTokens(newTokens);
+    localStorage.setItem(TOKENS_STORAGE_KEY, JSON.stringify(newTokens));
+    toast.info('Token deleted.');
+  };
 
   const addRepo = async (owner: string, repo: string, token?: string) => {
     if (repos.some(r => r.owner === owner && r.repo === repo)) {
@@ -64,7 +99,7 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <RepoContext.Provider value={{ repos, addRepo, deleteRepo }}>
+    <RepoContext.Provider value={{ repos, savedTokens, addRepo, deleteRepo, addSavedToken, deleteSavedToken }}>
       {children}
     </RepoContext.Provider>
   );

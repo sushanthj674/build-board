@@ -15,6 +15,42 @@ export interface RepoStatus {
   workflowRuns: WorkflowRun[];
 }
 
+export async function searchUserRepos(
+  owner: string, 
+  token?: string
+): Promise<string[]> {
+  if (!owner) return [];
+
+  // Try both user and org endpoints
+  const endpoints = [
+    `https://api.github.com/users/${owner}/repos?per_page=100&sort=updated`,
+    `https://api.github.com/orgs/${owner}/repos?per_page=100&sort=updated`
+  ];
+
+  const headers: HeadersInit = {
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'GitHub-Actions-Dashboard',
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token.trim()}`;
+  }
+
+  for (const url of endpoints) {
+    try {
+      const response = await fetch(url, { headers });
+      if (response.ok) {
+        const data = await response.json();
+        return data.map((r: any) => r.name);
+      }
+    } catch (error) {
+      console.error(`Error fetching from ${url}:`, error);
+    }
+  }
+
+  return [];
+}
+
 export async function createWebhook(
   owner: string, 
   repo: string, 
