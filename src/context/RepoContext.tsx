@@ -29,12 +29,8 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (saved) {
       setRepos(JSON.parse(saved));
     } else {
-      const initial = [
-        { 
-          owner: process.env.NEXT_PUBLIC_GITHUB_OWNER || 'sushanthj674', 
-          repo: process.env.NEXT_PUBLIC_GITHUB_REPO || 'todo-wrk-flw' 
-        }
-      ];
+      // Start with an empty list instead of a default repo
+      const initial: RepoConfig[] = [];
       setRepos(initial);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
     }
