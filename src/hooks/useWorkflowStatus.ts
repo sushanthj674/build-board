@@ -8,9 +8,8 @@ export function useWorkflowStatus(owner: string, repo: string, limit: number = 5
     `github-workflow-status-${owner}-${repo}-${tokenFingerprint}`,
     () => fetchWorkflowStatus(owner, repo, 5, token),
     {
-      // Fallback polling (60s) even if SSE is used, to ensure the UI is eventually correct
-      // if any push messages are missed. We use the provided refreshInterval or 60000.
-      refreshInterval: refreshInterval || 60000, 
+      // Disable polling entirely. We are now 100% real-time via Webhooks/SSE.
+      refreshInterval: 0, 
       revalidateOnFocus: true,
       dedupingInterval: 5000,
     }
