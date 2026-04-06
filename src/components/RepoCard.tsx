@@ -16,14 +16,15 @@ interface RepoCardProps {
 
 const RepoCard: React.FC<RepoCardProps> = ({ owner, repo, token, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(2000); // Default to 2 seconds
+  // Default to 60 seconds as a slow fallback since we have real-time SSE
+  const [refreshInterval, setRefreshInterval] = useState(60000); 
   const { repoStatus, isLoading, isError } = useWorkflowStatus(owner, repo, 5, token, refreshInterval);
   const [hasNotifiedError, setHasNotifiedError] = useState(false);
 
   useEffect(() => {
     if (isError) {
-      // Slow down polling to 30 seconds if we hit an error (likely rate limit)
-      setRefreshInterval(30000);
+      // Slow down polling significantly if we hit an error
+      setRefreshInterval(120000);
       
       if (!hasNotifiedError) {
         const message = isError.message || `Failed to fetch ${owner}/${repo}.`;
@@ -31,8 +32,8 @@ const RepoCard: React.FC<RepoCardProps> = ({ owner, repo, token, onDelete }) => 
         setHasNotifiedError(true);
       }
     } else {
-      // Restore polling if success
-      setRefreshInterval(2000);
+      // Restore default fallback polling
+      setRefreshInterval(60000);
       setHasNotifiedError(false);
     }
   }, [isError, owner, repo, hasNotifiedError]);

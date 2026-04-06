@@ -3,9 +3,13 @@
 import React from 'react';
 import RepoCard from './RepoCard';
 import { useRepos } from '@/context/RepoContext';
+import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 
 const Dashboard: React.FC = () => {
   const { repos, deleteRepo } = useRepos();
+  
+  // Activate the singleton SSE connection for all repos
+  useRealTimeUpdates();
 
   return (
     <div className="max-w-7xl mx-auto py-20 px-6">
