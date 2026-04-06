@@ -74,15 +74,15 @@ const FloatingMenu: React.FC = () => {
     localStorage.setItem(RECENT_REPOS_KEY, JSON.stringify(updatedRepos));
   };
 
-  // Combine predefined with recent for suggestions
-  const allOwners = Array.from(
+  // Combine predefined with recent for static suggestions
+  const allStaticOwners = Array.from(
     new Set([...recentOwners, ...PREDEFINED_OWNERS]),
   );
-  const allRepos = Array.from(
+  const allStaticRepos = Array.from(
     new Set([...recentRepos, ...PREDEFINED_REPOS.map((r) => r.split("/")[1])]),
   );
 
-  const ownerSuggestions = allOwners
+  const staticOwnerSuggestions = allStaticOwners
     .filter(
       (owner) =>
         owner.toLowerCase().includes(ownerInput.toLowerCase()) &&
@@ -90,7 +90,7 @@ const FloatingMenu: React.FC = () => {
     )
     .slice(0, 5);
 
-  const repoSuggestions = allRepos
+  const staticRepoSuggestions = allStaticRepos
     .filter(
       (repo) =>
         repo.toLowerCase().includes(repoInput.toLowerCase()) &&
@@ -273,14 +273,14 @@ const FloatingMenu: React.FC = () => {
                     />
                     <AnimatePresence>
                       {focusedField === "owner" &&
-                        ownerSuggestions.length > 0 && (
+                        staticOwnerSuggestions.length > 0 && (
                           <motion.div
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 5 }}
                             className="absolute bottom-full left-0 w-full mb-2 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl z-50"
                           >
-                            {ownerSuggestions.map((suggestion) => (
+                            {staticOwnerSuggestions.map((suggestion) => (
                               <button
                                 key={suggestion}
                                 type="button"
