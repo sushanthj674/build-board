@@ -19,10 +19,10 @@ export async function GET(req: NextRequest) {
       // 3. Listen to the server-side event bus
       eventBus.on('workflow_run.update', onUpdate);
 
-      // 4. Keep-alive ping every 30 seconds
+      // 4. Keep-alive ping every 15 seconds (aggressive for Render/Proxies)
       const keepAlive = setInterval(() => {
         controller.enqueue(encoder.encode(': keep-alive\n\n'));
-      }, 30000);
+      }, 15000);
 
       // 5. Cleanup when the request is closed
       req.signal.addEventListener('abort', () => {
