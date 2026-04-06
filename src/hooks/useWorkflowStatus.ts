@@ -8,10 +8,12 @@ export function useWorkflowStatus(owner: string, repo: string, limit: number = 5
     `github-workflow-status-${owner}-${repo}-${tokenFingerprint}`,
     () => fetchWorkflowStatus(owner, repo, 5, token),
     {
-      // Disable polling entirely. We are now 100% real-time via Webhooks/SSE.
+      // Disable polling and automatic revalidation. 
+      // We rely on the initial fetch + Webhooks/SSE for all updates.
       refreshInterval: 0, 
-      revalidateOnFocus: true,
-      dedupingInterval: 5000,
+      revalidateOnFocus: false, // STOP fetching when the window is refocused
+      revalidateOnReconnect: false, // STOP fetching when network reconnects
+      dedupingInterval: 10000, // Increase deduping to 10 seconds
     }
   );
 
