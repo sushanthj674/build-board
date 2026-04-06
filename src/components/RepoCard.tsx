@@ -16,18 +16,23 @@ interface RepoCardProps {
 
 const RepoCard: React.FC<RepoCardProps> = ({ owner, repo, token, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { repoStatus, isLoading, isError } = useWorkflowStatus(owner, repo, 5, token);
+  const [refreshInterval, setRefreshInterval] = useState(2000); // Default to 2 seconds
+  const { repoStatus, isLoading, isError } = useWorkflowStatus(owner, repo, 5, token, refreshInterval);
   const [hasNotifiedError, setHasNotifiedError] = useState(false);
 
   useEffect(() => {
-    if (isError && !hasNotifiedError) {
-      const message = isError.message || `Failed to fetch ${owner}/${repo}. Check your token or repo name.`;
+    if (isError) {
+      // Slow down polling to 30 seconds if we hit an error (likely rate limit)
+      setRefreshInterval(30000);
       
-      toast.error(message, {
-        id: `${owner}-${repo}-error`,
-      });
-      setHasNotifiedError(true);
-    } else if (!isError) {
+      if (!hasNotifiedError) {
+        const message = isError.message || `Failed to fetch ${owner}/${repo}.`;
+        toast.error(message, { id: `${owner}-${repo}-error` });
+        setHasNotifiedError(true);
+      }
+    } else {
+      // Restore polling if success
+      setRefreshInterval(2000);
       setHasNotifiedError(false);
     }
   }, [isError, owner, repo, hasNotifiedError]);
