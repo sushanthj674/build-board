@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
 
+import { createWebhook } from '@/lib/github';
+
 export interface RepoConfig {
   owner: string;
   repo: string;
@@ -11,7 +13,7 @@ export interface RepoConfig {
 
 interface RepoContextType {
   repos: RepoConfig[];
-  addRepo: (owner: string, repo: string, token?: string) => void;
+  addRepo: (owner: string, repo: string, token?: string) => Promise<void>;
   deleteRepo: (owner: string, repo: string) => void;
 }
 
@@ -38,11 +40,22 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  const addRepo = (owner: string, repo: string, token?: string) => {
+  const addRepo = async (owner: string, repo: string, token?: string) => {
     if (repos.some(r => r.owner === owner && r.repo === repo)) {
       toast.error('This repository is already being monitored.');
       return;
     }
+
+    // Try to create the webhook automatically if a token is provided
+    if (token) {
+      const success = await createWebhook(owner, repo, token);
+      if (success) {
+        toast.success(`Webhook created for ${owner}/${repo}`);
+      } else {
+        toast.info(`Could not create webhook automatically, using slow-polling fallback.`);
+      }
+    }
+
     const newRepos = [...repos, { owner, repo, token }];
     setRepos(newRepos);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newRepos));

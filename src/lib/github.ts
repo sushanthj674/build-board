@@ -13,6 +13,58 @@ export interface RepoStatus {
   workflowRuns: WorkflowRun[];
 }
 
+export async function createWebhook(
+  owner: string, 
+  repo: string, 
+  token: string
+): Promise<boolean> {
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/webhook/github`;
+  const secret = process.env.NEXT_PUBLIC_GITHUB_WEBHOOK_SECRET || '';
+  
+  const url = `https://api.github.com/repos/${owner}/${repo}/hooks`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `Bearer ${token.trim()}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'GitHub-Actions-Dashboard',
+      },
+      body: JSON.stringify({
+        name: 'web',
+        active: true,
+        events: ['workflow_run'],
+        config: {
+          url: webhookUrl,
+          content_type: 'json',
+          secret: secret,
+          insecure_ssl: '0'
+        }
+      })
+    });
+
+    if (response.status === 201) {
+      console.log(`Successfully created webhook for ${owner}/${repo}`);
+      return true;
+    } 
+    
+    if (response.status === 422) {
+      // 422 usually means the webhook already exists
+      console.log(`Webhook already exists for ${owner}/${repo}`);
+      return true;
+    }
+
+    const errorData = await response.json();
+    console.error('Failed to create webhook:', errorData.message);
+    return false;
+  } catch (error) {
+    console.error('Error creating webhook:', error);
+    return false;
+  }
+}
+
 export async function fetchWorkflowStatus(
   owner: string, 
   repo: string, 
