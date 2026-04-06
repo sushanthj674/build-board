@@ -45,9 +45,7 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Try to create the webhook automatically if a token is provided
     if (token) {
       const success = await createWebhook(owner, repo, token);
-      if (success) {
-        toast.success(`Webhook created for ${owner}/${repo}`);
-      } else {
+      if (!success) {
         toast.info(`Could not create webhook automatically, using slow-polling fallback.`);
       }
     }

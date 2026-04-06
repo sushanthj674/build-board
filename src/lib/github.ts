@@ -48,13 +48,13 @@ export async function createWebhook(
     });
 
     if (response.status === 201) {
-      console.log(`Successfully created webhook for ${owner}/${repo}`);
+      toast.success(`Webhook created successfully for ${owner}/${repo}!`);
       return true;
     } 
     
     if (response.status === 422) {
       // 422 usually means the webhook already exists
-      console.log(`Webhook already exists for ${owner}/${repo}`);
+      toast.info(`Webhook already exists for ${owner}/${repo}.`);
       return true;
     }
 
